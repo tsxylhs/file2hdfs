@@ -1,11 +1,15 @@
 package com.jn.file2hdfs;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.yarn.proto.YarnServerResourceManagerServiceProtos;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -20,17 +24,22 @@ import java.util.Map;
  **/
 public class File2hdfs {
     static Configuration conf;
-    static Boolean SystemTag=true;
+    static Boolean SystemTag = true;
 //
 //    static {
 //        conf.set("fs.defaultFS", "hdfs://192.168.121.133:9000");
 //    }
 
     public static void main(String[] args) {
-        String sourceStr="D:\\java\\src.zip";
-       String tmp= sourceStr.replace("/","://\"").replaceAll("/","//\"");
-       System.out.println(tmp);
-
+        String sourceStr = "D:\\java\\src.zip\\LII";
+        String s = sourceStr.replace(":\\", "/").replace("\\", "/");
+        System.out.println(s);
+        String[] arrs = s.split("/");
+        String v = s.substring(0, arrs[0].length()) + ":\\" + s.substring(arrs[0].length() + 1, s.length() - 1);
+        String kv = v.replace("/", "\\");
+        System.out.println(kv);
+        //  .replace("/","\\");
+        // System.out.println(v);
     }
 
     public static void upload() throws IOException {
@@ -58,13 +67,13 @@ public class File2hdfs {
             return null;
         }
         List<String> sourcePath = getAllFile(path);
-         if (sourcePath.size()<=0){
-          return null;
+        if (sourcePath.size() <= 0) {
+            return null;
         }
-         Map<String,String> map=new HashMap<>();
-         for(String sourceStr:sourcePath){
-           sourceStr.replace("://\"","/").replaceAll("//\"","/");
-         }
+        Map<String, String> map = new HashMap<>();
+        for (String sourceStr : sourcePath) {
+            sourceStr.replace("://\"", "/").replaceAll("//\"", "/");
+        }
         return null;
 
     }
@@ -96,14 +105,7 @@ public class File2hdfs {
     }
 
     //路径转换
-    public static String convert2linux(String path){
-        if(SystemTag){
-            int index=path.indexOf(":");
-            if (index>1||index==-1){
-                return path;
-            }
-            //Sysstor
-        }
+    public static String convert2linux(String path) {
         return "";
     }
 }

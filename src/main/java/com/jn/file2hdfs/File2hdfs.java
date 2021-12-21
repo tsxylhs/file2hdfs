@@ -1,5 +1,7 @@
 package com.jn.file2hdfs;
 
+import com.jn.file2hdfs.util.OSUtil;
+import com.jn.file2hdfs.util.PropertiesReader;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -12,10 +14,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @ClassName file2hdfs
@@ -25,27 +24,29 @@ import java.util.Map;
 public class File2hdfs {
     static Configuration conf;
     static Boolean SystemTag = true;
-//
+
 //    static {
+//        conf=new Configuration();
 //        conf.set("fs.defaultFS", "hdfs://192.168.121.133:9000");
 //    }
 
-    public static void main(String[] args) {
-        String sourceStr = "D:\\java\\src.zip\\LII";
-        String s = sourceStr.replace(":\\", "/").replace("\\", "/");
-        System.out.println(s);
-        String[] arrs = s.split("/");
-        String v = s.substring(0, arrs[0].length()) + ":\\" + s.substring(arrs[0].length() + 1, s.length() - 1);
-        String kv = v.replace("/", "\\");
-        System.out.println(kv);
-        //  .replace("/","\\");
-        // System.out.println(v);
+    public static void main(String[] args) throws IOException {
+        Properties properties=    PropertiesReader.readProperties("src/main/resources/config.properties");
+        System.out.println(properties.get("hdfs.url"));
+        System.out.println(properties.get("file.input"));
+        System.out.println(properties.get("file.output"));
+        FileSystem fs = FileSystem.get(conf);
+       Map<String,String> source2target= FileToMap(properties.get("file.input").toString());
+       if (!source2target.isEmpty()) {
+           for (Map.Entry<String, String> m : source2target.entrySet()) {
+               upload(fs, m.getKey(), m.getValue());
+           }
+       }
     }
 
-    public static void upload() throws IOException {
-        FileSystem fs = FileSystem.get(conf);
-        Path src = new Path("");
-        Path dest = new Path("");
+    public static void upload(FileSystem fs,String source,String target) throws IOException {
+        Path src = new Path(source);
+        Path dest = new Path(target);
         fs.copyFromLocalFile(src, dest);
         FileStatus[] fileStatuses = fs.listStatus(dest);
         for (FileStatus file : fileStatuses) {
@@ -72,12 +73,11 @@ public class File2hdfs {
         }
         Map<String, String> map = new HashMap<>();
         for (String sourceStr : sourcePath) {
-            sourceStr.replace("://\"", "/").replaceAll("//\"", "/");
+            map.put(sourceStr,OSUtil.windows2linuxPath(sourceStr));
         }
-        return null;
+        return map;
 
     }
-
     public static List<String> getAllFile(String directoryPath) {
         LinkedList list = new LinkedList();
         if (directoryPath == null) {
@@ -102,10 +102,5 @@ public class File2hdfs {
             }
         }
         return list;
-    }
-
-    //路径转换
-    public static String convert2linux(String path) {
-        return "";
     }
 }
